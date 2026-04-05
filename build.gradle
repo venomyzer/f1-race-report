@@ -1,0 +1,116 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// build.gradle  –  F1 Race Report Tool (Spring Boot + Gradle)
+//
+// Real-world analogy: Think of this file like a blueprint + shopping list
+// for a construction project. Gradle reads it and knows exactly what
+// "bricks" (libraries) to fetch and how to assemble the final building (JAR).
+// ─────────────────────────────────────────────────────────────────────────────
+
+plugins {
+    // Spring Boot plugin: adds `bootRun`, `bootJar` tasks and wires everything
+    id 'org.springframework.boot' version '3.2.5'
+
+    // Dependency Management plugin: works with the Boot BOM so all library
+    // versions stay compatible with each other (no more "JAR hell")
+    id 'io.spring.dependency-management' version '1.1.5'
+
+    // Standard Java compilation
+    id 'java'
+}
+
+group   = 'com.f1report'
+version = '1.0.0'
+
+// Use Java 21 (LTS) – records, pattern matching, virtual threads available
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+// ─── REPOSITORIES ────────────────────────────────────────────────────────────
+// Tell Gradle where to download dependencies from.
+// Maven Central = the world's largest public Java library registry.
+repositories {
+    mavenCentral()
+}
+
+// ─── DEPENDENCY VERSIONS (not managed by Spring BOM) ─────────────────────────
+ext {
+    caffeineVersion = '3.1.8'   // in-memory LRU cache
+    openPdfVersion  = '1.3.30'  // PDF generation (LGPL, free to use)
+}
+
+// ─── DEPENDENCIES ────────────────────────────────────────────────────────────
+dependencies {
+
+    // ── WEB LAYER ──────────────────────────────────────────────────────────
+    // Brings in: embedded Tomcat + Spring MVC + Jackson JSON serialization.
+    // Like getting a fully fitted restaurant kitchen instead of building one
+    // from individual appliances.
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // ── DATA / PERSISTENCE LAYER ────────────────────────────────────────────
+    // Brings in: Hibernate ORM + Spring Data JPA + HikariCP connection pool.
+    // Analogy: Hibernate = translator between Java objects and SQL rows.
+    //          Spring Data JPA = gives you CRUD for free with zero SQL.
+    //          HikariCP = a pool of pre-opened DB connections (fast!).
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // PostgreSQL JDBC driver – only needed at runtime, not compile time
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // ── CACHING ─────────────────────────────────────────────────────────────
+    // Spring Cache abstraction + Caffeine backend.
+    // Analogy: a smart receptionist who remembers the last 500 answers so she
+    // doesn't call the Ergast F1 API for the same race twice.
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}"
+
+    // ── VALIDATION ──────────────────────────────────────────────────────────
+    // Enables @NotNull, @Min, @Max, @NotBlank on request DTOs.
+    // Spring validates incoming HTTP bodies automatically when @Valid is used.
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // ── ACTUATOR ────────────────────────────────────────────────────────────
+    // Exposes /actuator/health and /actuator/metrics for production monitoring.
+    // Like adding a dashboard + vitals monitor to your application.
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // ── LOMBOK ──────────────────────────────────────────────────────────────
+    // Generates boilerplate (getters, setters, builders, constructors)
+    // at compile time via annotations – keeps model classes 80% shorter.
+    compileOnly    'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // ── PDF EXPORT ──────────────────────────────────────────────────────────
+    // OpenPDF: LGPL fork of iText 4 – create tables, paragraphs, fonts in PDF.
+    // Think of it as a "PDF printer driver" you call from code.
+    implementation "com.github.librepdf:openpdf:${openPdfVersion}"
+
+    // ── DEV TOOLS ───────────────────────────────────────────────────────────
+    // Auto-restarts the app when you save a file during development.
+    // Only active in dev mode; excluded from the production JAR automatically.
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // ── TESTING ─────────────────────────────────────────────────────────────
+    // JUnit 5 + Spring Test + Mockito (all bundled in this starter)
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // H2 in-memory database: used ONLY in tests so they don't need a real
+    // PostgreSQL instance to run. The test context swaps the datasource to H2.
+    // Analogy: like using a practice arena instead of the real stadium for drills.
+    testRuntimeOnly 'com.h2database:h2'
+}
+
+// ─── TEST CONFIGURATION ──────────────────────────────────────────────────────
+tasks.named('test') {
+    useJUnitPlatform() // Use JUnit 5 platform (not legacy JUnit 4)
+}
+
+// ─── BOOT JAR SETTINGS ───────────────────────────────────────────────────────
+// The `bootJar` task creates a self-contained "fat JAR" with everything inside.
+// Run it with:  ./gradlew bootJar
+// Execute with: java -jar build/libs/f1-race-report-backend-1.0.0.jar
+bootJar {
+    archiveFileName = 'f1-race-report-backend.jar'
+}

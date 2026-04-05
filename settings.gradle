@@ -1,0 +1,4 @@
+// settings.gradle
+// Tells Gradle the name of this project.
+// In multi-module setups, child modules are included here too.
+rootProject.name = 'f1-race-report-backend'
