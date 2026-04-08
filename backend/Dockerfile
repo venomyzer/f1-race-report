@@ -1,12 +1,28 @@
-# 1. Change the Build Stage to use JDK 21
-FROM gradle:7.6.3-jdk21 AS build
+# 1. Build Stage - Use Gradle 8.5 to match Spring Boot 3.2.5
+FROM gradle:8.5-jdk21 AS build
 WORKDIR /app
-COPY . .
-RUN chmod +x gradlew && ./gradlew build -x test
 
-# 2. Ensure your Run Stage also uses Java 21 (as we discussed before)
+# Copy only the gradle files first to leverage Docker caching
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
+
+# Copy the rest of the source code
+COPY src src
+
+# Build the application
+# We use the system's gradle (8.5) instead of the wrapper if the wrapper is corrupted
+RUN gradle build -x test --no-daemon
+
+# 2. Run Stage
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
-# Adjust this path based on your actual JAR name
-COPY --from=build /app/build/libs/*.jar app.jar
+
+# This copies the executable jar from the build stage
+# Note: Spring Boot 3.2+ often creates a "plain" jar and a "boot" jar.
+# We want the one that isn't "-plain.jar"
+COPY --from=build /app/build/libs/*[!plain].jar app.jar
+
+EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
