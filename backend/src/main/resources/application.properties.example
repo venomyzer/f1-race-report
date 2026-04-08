@@ -1,0 +1,17 @@
+# =========================
+# 🚀 SERVER CONFIG
+# =========================
+server.port=8080
+
+# =========================
+# 🗄️ DATABASE CONFIG (Example)
+# =========================
+spring.datasource.url=jdbc:postgresql://localhost:5432/f1db
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+
+# =========================
+# 🧠 JPA CONFIG
+# =========================
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true

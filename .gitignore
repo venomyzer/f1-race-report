@@ -1,17 +1,39 @@
-# Sensitive config
+# =========================
+# 🔐 ENV FILES (ALL)
+# =========================
 .env
-src/main/resources/application.properties
+*.env
 
-# Build output
-build/
-out/
+# =========================
+# 🚀 FRONTEND (React + Vite)
+# =========================
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
 
-# Gradle
-.gradle/
+# Optional logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
 
-# IntelliJ
+# =========================
+# ☕ BACKEND (Spring Boot)
+# =========================
+backend/build/
+backend/out/
+backend/.gradle/
+
+# Sensitive config
+backend/src/main/resources/application.properties
+
+# =========================
+# 💻 IDE & SYSTEM FILES
+# =========================
 .idea/
 *.iml
-
-# macOS
 .DS_Store
+
+# =========================
+# 🧪 Misc
+# =========================
+*.log

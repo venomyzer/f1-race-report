@@ -1,0 +1,203 @@
+/* src/index.css
+   Global styles + Tailwind CSS directives
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* @tailwind directives inject Tailwind's generated CSS:
+   - base:       CSS reset + sensible HTML defaults
+   - components: reusable component classes (we define custom ones below)
+   - utilities:  all utility classes (bg-f1-red, text-white, flex, etc.)     */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base layer overrides ────────────────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-f1-darker text-white antialiased;
+    min-height: 100vh;
+  }
+
+  /* Custom scrollbar matching F1 dark theme */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track  { @apply bg-f1-dark; }
+  ::-webkit-scrollbar-thumb  { @apply bg-f1-gray rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-f1-red; }
+
+  /* Remove default list styling (we use custom list designs) */
+  ul, ol { list-style: none; margin: 0; padding: 0; }
+
+  /* Selection highlight in F1 red */
+  ::selection { background: rgba(225, 6, 0, 0.4); color: white; }
+}
+
+/* ── Reusable component classes ──────────────────────────────────────────── */
+/* Real-world analogy: these are like reusable design tokens.
+   Instead of writing `bg-f1-dark border border-f1-gray rounded-xl p-4`
+   everywhere, we define .f1-card once and use it 20 places.             */
+@layer components {
+
+  /* Standard dark card used throughout the dashboard */
+  .f1-card {
+    @apply bg-f1-dark border border-f1-gray rounded-xl p-6 shadow-card
+           transition-shadow duration-300 hover:shadow-card-hover;
+  }
+
+  /* Red accent card (used for winner / highlights) */
+  .f1-card-accent {
+    @apply bg-f1-dark border border-f1-red rounded-xl p-6 shadow-f1;
+  }
+
+  /* Primary button: F1 red background */
+  .btn-primary {
+    @apply bg-f1-red hover:bg-red-700 active:bg-red-800
+           text-white font-semibold px-6 py-3 rounded-lg
+           transition-all duration-200 ease-in-out
+           disabled:opacity-50 disabled:cursor-not-allowed
+           focus:outline-none focus:ring-2 focus:ring-f1-red focus:ring-offset-2
+           focus:ring-offset-f1-darker
+           flex items-center gap-2;
+  }
+
+  /* Secondary button: dark outline */
+  .btn-secondary {
+    @apply bg-transparent border border-f1-gray hover:border-f1-red
+           text-white font-medium px-6 py-3 rounded-lg
+           transition-all duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed
+           focus:outline-none focus:ring-2 focus:ring-f1-gray
+           flex items-center gap-2;
+  }
+
+  /* Dropdown / select element styled for dark theme */
+  .f1-select {
+    @apply bg-f1-dark border border-f1-gray text-white rounded-lg
+           px-4 py-3 w-full appearance-none cursor-pointer
+           focus:outline-none focus:ring-2 focus:ring-f1-red focus:border-transparent
+           transition-colors duration-200 hover:border-f1-red;
+  }
+
+  /* Section heading with red left border accent */
+  .section-heading {
+    @apply text-xl font-bold text-white border-l-4 border-f1-red pl-3 mb-4;
+  }
+
+  /* Stat badge (e.g., "P1", "25 pts", "DNF") */
+  .stat-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold;
+  }
+
+  /* Position badges */
+  .pos-badge-1 { @apply stat-badge bg-yellow-500/20 text-yellow-400 border border-yellow-500/30; }
+  .pos-badge-2 { @apply stat-badge bg-gray-400/20 text-gray-300 border border-gray-400/30; }
+  .pos-badge-3 { @apply stat-badge bg-orange-700/20 text-orange-400 border border-orange-700/30; }
+  .pos-badge-dnf { @apply stat-badge bg-red-900/30 text-red-400 border border-red-800/30; }
+
+  /* Fastest lap purple highlight */
+  .fastest-lap-badge {
+    @apply stat-badge bg-purple-900/40 text-purple-300 border border-purple-700/40;
+  }
+
+  /* Loading skeleton pulse */
+  .skeleton {
+    @apply bg-f1-gray animate-pulse rounded;
+  }
+
+  /* Data table row hover */
+  .table-row-hover {
+    @apply hover:bg-white/5 transition-colors duration-150;
+  }
+
+  /* Red separator line */
+  .f1-divider {
+    @apply border-t border-f1-red/30 my-4;
+  }
+}
+
+/* ── Utility layer additions ─────────────────────────────────────────────── */
+@layer utilities {
+  /* Text gradient: white → F1 red (used in big headings) */
+  .text-gradient-f1 {
+    background: linear-gradient(135deg, #ffffff 0%, #E10600 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Frosted glass card effect */
+  .glass-card {
+    background: rgba(21, 21, 30, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Race track red stripe decoration */
+  .race-stripe {
+    background: repeating-linear-gradient(
+      90deg,
+      #E10600 0px,
+      #E10600 4px,
+      transparent 4px,
+      transparent 16px
+    );
+  }
+
+  /* Smooth number transition for position changes */
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+}
+
+/* ── Recharts dark theme overrides ─────────────────────────────────────── */
+/* Recharts renders SVG. We override its default white background
+   and light-coloured text to match our dark F1 theme.               */
+.recharts-wrapper,
+.recharts-surface { background: transparent !important; }
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(56, 56, 63, 0.5) !important;
+}
+
+.recharts-text,
+.recharts-label {
+  fill: #9CA3AF !important;
+  font-size: 11px;
+  font-family: 'Inter', sans-serif;
+}
+
+.recharts-legend-item-text {
+  color: #D1D5DB !important;
+  font-size: 11px;
+}
+
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #1E1E2A !important;
+  border: 1px solid #38383F !important;
+  border-radius: 8px !important;
+}
+
+.recharts-tooltip-label {
+  color: #F9FAFB !important;
+  font-weight: 600;
+}
+
+/* ── Page transition animation ──────────────────────────────────────────── */
+.page-enter {
+  animation: fadeIn 0.35s ease-out;
+}
+
+/* ── Markdown report styling ────────────────────────────────────────────── */
+/* The AI report comes as markdown. react-markdown renders it to HTML.
+   These styles make that HTML look good in our dark theme.            */
+.report-content h1,
+.report-content h2,
+.report-content h3 {
+  @apply text-white font-bold mt-6 mb-3;
+}
+.report-content p  { @apply text-gray-300 leading-relaxed mb-4; }
+.report-content strong { @apply text-white font-semibold; }
+.report-content em { @apply text-gray-400 italic; }
+.report-content hr { @apply border-f1-gray my-6; }
