@@ -1,17 +1,22 @@
 # =========================
 # 🚀 SERVER CONFIG
 # =========================
-server.port=8080
+server.port=${PORT:8080}
 
 # =========================
-# 🗄️ DATABASE CONFIG (Example)
+# 🗄️ DATABASE CONFIG
 # =========================
-spring.datasource.url=jdbc:postgresql://localhost:5432/f1db
-spring.datasource.username=your_username
-spring.datasource.password=your_password
+spring.datasource.url=${DB_URL}
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
 
 # =========================
 # 🧠 JPA CONFIG
 # =========================
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
+
+# =========================
+# 🤖 GROQ API
+# =========================
+groq.api.key=${GROQ_API_KEY}
