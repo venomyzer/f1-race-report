@@ -5,7 +5,7 @@ COPY . .
 RUN chmod +x gradlew && ./gradlew build -x test
 
 # Run stage
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 COPY --from=build /app/build/libs/app.jar app.jar
