@@ -1,0 +1,17 @@
+# Sensitive config
+.env
+src/main/resources/application.properties
+
+# Build output
+build/
+out/
+
+# Gradle
+.gradle/
+
+# IntelliJ
+.idea/
+*.iml
+
+# macOS
+.DS_Store
