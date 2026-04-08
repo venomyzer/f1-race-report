@@ -2,12 +2,14 @@
 FROM gradle:8.5-jdk17 AS build
 WORKDIR /app
 COPY . .
-RUN gradle build --no-daemon
+RUN chmod +x gradlew && ./gradlew build -x test
 
 # Run stage
-FROM openjdk:17-jdk-slim
+FROM openjdk:21-jdk-slim
 WORKDIR /app
-COPY --from=build /app/build/libs/*.jar app.jar
+
+COPY --from=build /app/build/libs/app.jar app.jar
 
 EXPOSE 8080
+
 CMD ["java", "-jar", "app.jar"]

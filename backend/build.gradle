@@ -117,3 +117,8 @@ tasks.withType(JavaCompile).configureEach {
 bootJar {
     archiveFileName = 'f1-race-report-backend.jar'
 }
+
+
+jar {
+    archiveFileName = "app.jar"
+}
