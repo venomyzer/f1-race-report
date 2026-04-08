@@ -42,13 +42,17 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class GroqService {
 
-    @Qualifier("groqRestTemplate")
     private final RestTemplate restTemplate;
-
     private final ObjectMapper objectMapper;
+
+    public GroqService(
+            @Qualifier("groqRestTemplate") RestTemplate restTemplate,
+            ObjectMapper objectMapper) {
+        this.restTemplate = restTemplate;
+        this.objectMapper  = objectMapper;
+    }
 
     @Value("${groq.api.key}")
     private String apiKey;

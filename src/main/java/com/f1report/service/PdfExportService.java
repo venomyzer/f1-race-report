@@ -5,6 +5,7 @@ import com.f1report.dto.RaceDataDTO;
 import com.f1report.dto.ReportResponseDTO;
 import com.lowagie.text.*;
 import com.lowagie.text.Font;
+import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -418,7 +419,7 @@ public class PdfExportService {
 
     /**
      * PageNumberFooter – adds "Race Name | Season | Page X of Y" to every page.
-     * Implements PdfPageEventHelper (the OpenPDF way to add running headers/footers).
+     * Uses PdfPageEventHelper (OpenPDF's hook for running headers/footers).
      *
      * Real-world analogy: like the footer automatically printed on every page
      * of a legal document – the printer handles it, not the person writing the content.
@@ -435,44 +436,45 @@ public class PdfExportService {
 
         @Override
         public void onOpenDocument(PdfWriter writer, Document document) {
-            // Placeholder that will be filled in with total page count at close
+            // Reserve a small template slot that will be filled with the
+            // total page count once the document is closed.
             totalPagesTemplate = writer.getDirectContent().createTemplate(30, 16);
         }
 
         @Override
         public void onEndPage(PdfWriter writer, Document document) {
-            PdfContentByte cb = writer.getDirectContent();
-            Font footerFont   = new Font(Font.HELVETICA, 8, Font.NORMAL, Color.GRAY);
+            PdfContentByte cb  = writer.getDirectContent();
+            Font footerFont    = new Font(Font.HELVETICA, 8, Font.NORMAL, Color.GRAY);
+            float bottom       = document.bottom() - 10;
 
             // Left: race name + season
             ColumnText.showTextAligned(cb, Element.ALIGN_LEFT,
                 new Phrase(raceName + " | Season " + season, footerFont),
-                document.leftMargin(), document.bottom() - 10, 0);
+                document.leftMargin(), bottom, 0);
 
-            // Right: Page N of M
-            Phrase pagePhrase = new Phrase("Page " + writer.getPageNumber() + " of ", footerFont);
+            // Right: "Page N of " + placeholder for total
+            String pageText    = "Page " + writer.getPageNumber() + " of ";
+            float textWidth    = footerFont.getCalculatedBaseFont(false)
+                                           .getWidthPoint(pageText, 8);
+            float rightEdge    = document.right();
+
             ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT,
-                pagePhrase,
-                document.right() - 30, document.bottom() - 10, 0);
+                new Phrase(pageText, footerFont),
+                rightEdge - 28, bottom, 0);
 
-            cb.addTemplate(totalPagesTemplate,
-                document.right() - 28, document.bottom() - 11);
+            // Place the template that will later hold the total page number
+            cb.addTemplate(totalPagesTemplate, rightEdge - 28, bottom - 1);
         }
 
         @Override
         public void onCloseDocument(PdfWriter writer, Document document) {
-            // Fill in the total page count placeholder
+            // Now we know the total pages – write it into the reserved template
+            Font footerFont = new Font(Font.HELVETICA, 8, Font.NORMAL, Color.GRAY);
             ColumnText.showTextAligned(
-                new PdfCanvas(totalPagesTemplate),
+                totalPagesTemplate.getDuplicate(),
                 Element.ALIGN_LEFT,
-                new Phrase(String.valueOf(writer.getPageNumber() - 1),
-                    new Font(Font.HELVETICA, 8, Font.NORMAL, Color.GRAY)),
+                new Phrase(String.valueOf(writer.getPageNumber() - 1), footerFont),
                 0, 2, 0);
-        }
-
-        // PdfCanvas is a minimal wrapper since OpenPDF's template API needs it
-        private static class PdfCanvas extends PdfContentByte {
-            PdfCanvas(PdfTemplate template) { super(null); }
         }
     }
 }

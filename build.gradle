@@ -106,6 +106,9 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform() // Use JUnit 5 platform (not legacy JUnit 4)
 }
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-parameters'
+}
 
 // ─── BOOT JAR SETTINGS ───────────────────────────────────────────────────────
 // The `bootJar` task creates a self-contained "fat JAR" with everything inside.

@@ -1,23 +1,20 @@
 package com.f1report.config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Duration;
 import java.util.concurrent.Executor;
 
 /**
  * AppConfig – defines beans that are shared across the whole application.
  *
- * A @Bean method is like a factory method registered with Spring's IoC
- * (Inversion of Control) container. Instead of "new RestTemplate()" scattered
- * throughout your code (hard to configure, test, or swap), you declare it
- * once here and Spring injects it wherever you use @Autowired or constructor
- * injection.
+ * NOTE: Spring Boot 3.2 removed connectTimeout(Duration) / readTimeout(Duration)
+ * from RestTemplateBuilder. We now configure timeouts directly on
+ * SimpleClientHttpRequestFactory, which is the underlying HTTP transport.
  *
  * Real-world analogy: AppConfig is the "company storeroom" – tools are built
  * and stored here once, then handed out to any employee (service) who needs them.
@@ -25,7 +22,6 @@ import java.util.concurrent.Executor;
 @Configuration
 public class AppConfig {
 
-    // Read timeout values from application.properties
     @Value("${ergast.api.timeout-ms:10000}")
     private int ergastTimeoutMs;
 
@@ -33,35 +29,33 @@ public class AppConfig {
     private int groqTimeoutMs;
 
     /**
-     * ergastRestTemplate – configured HTTP client for the Ergast/Jolpica F1 API.
+     * ergastRestTemplate – HTTP client for the Jolpica/Ergast F1 API.
      *
-     * RestTemplate is Spring's synchronous HTTP client.
-     * We create a separate bean per external API so each has its own timeout
-     * settings (Ergast is fast; Groq AI can be slow under load).
+     * SimpleClientHttpRequestFactory wraps Java's built-in HttpURLConnection.
+     * connectTimeout = max ms to establish the TCP connection.
+     * readTimeout    = max ms to wait for the server to begin responding.
      *
      * Analogy: like two different phone lines – one for quick domestic calls,
-     * one for international calls with longer connection time allowed.
+     * one for international calls with a longer wait allowed.
      */
     @Bean(name = "ergastRestTemplate")
-    public RestTemplate ergastRestTemplate(RestTemplateBuilder builder) {
-        return builder
-            // How long to wait for a TCP connection to be established
-            .connectTimeout(Duration.ofMillis(5000))
-            // How long to wait for the server to send a response
-            .readTimeout(Duration.ofMillis(ergastTimeoutMs))
-            .build();
+    public RestTemplate ergastRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);           // 5s to connect
+        factory.setReadTimeout(ergastTimeoutMs);   // 10s to read
+        return new RestTemplate(factory);
     }
 
     /**
-     * groqRestTemplate – configured HTTP client for the Groq AI API.
+     * groqRestTemplate – HTTP client for the Groq AI API.
      * Longer read timeout because LLM inference can take 5–20 seconds.
      */
     @Bean(name = "groqRestTemplate")
-    public RestTemplate groqRestTemplate(RestTemplateBuilder builder) {
-        return builder
-            .connectTimeout(Duration.ofMillis(5000))
-            .readTimeout(Duration.ofMillis(groqTimeoutMs))
-            .build();
+    public RestTemplate groqRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);          // 5s to connect
+        factory.setReadTimeout(groqTimeoutMs);    // 30s to read
+        return new RestTemplate(factory);
     }
 
     /**

@@ -47,7 +47,6 @@ import java.util.stream.StreamSupport;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ErgastService {
 
     // ── Injected dependencies ─────────────────────────────────────────────────
@@ -56,11 +55,15 @@ public class ErgastService {
      * Named qualifier: uses the "ergastRestTemplate" bean from AppConfig,
      * which has the Ergast-specific timeout settings (10s read timeout).
      */
-    @Qualifier("ergastRestTemplate")
     private final RestTemplate restTemplate;
-
-    /** Jackson ObjectMapper for parsing JSON → JsonNode tree */
     private final ObjectMapper objectMapper;
+
+    public ErgastService(
+            @Qualifier("ergastRestTemplate") RestTemplate restTemplate,
+            ObjectMapper objectMapper) {
+        this.restTemplate = restTemplate;
+        this.objectMapper  = objectMapper;
+    }
 
     // ── Config values from application.properties ─────────────────────────────
     @Value("${ergast.api.base-url}")
