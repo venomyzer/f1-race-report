@@ -115,10 +115,12 @@ tasks.withType(JavaCompile).configureEach {
 // Run it with:  ./gradlew bootJar
 // Execute with: java -jar build/libs/f1-race-report-backend-1.0.0.jar
 bootJar {
-    archiveFileName = 'f1-race-report-backend.jar'
+    // This is the executable "Fat JAR" that contains all your dependencies
+    archiveFileName = 'app.jar'
 }
 
-
 jar {
-    archiveFileName = "app.jar"
+    // Disable the standard JAR task.
+    // This prevents Gradle from creating a "plain" JAR that doesn't work on its own.
+    enabled = false
 }
