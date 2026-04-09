@@ -33,7 +33,8 @@ public class CorsConfig implements WebMvcConfigurer {
             .allowedOrigins(
                 "http://localhost:5173",   // Vite default dev port
                 "http://localhost:3000",   // CRA / alternate port
-                "http://localhost:4173"    // Vite preview port
+                "http://localhost:4173",   // Vite preview port
+                "https://f1-race-report.vercel.app/"
             )
 
             // Allow standard HTTP methods

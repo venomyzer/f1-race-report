@@ -55,7 +55,6 @@ public class Report {
      * @Lob (Large Object) stores this in a TEXT column in PostgreSQL,
      * which can hold up to 1 GB. A typical AI report is ~2000 chars.
      */
-    @Lob
     @Column(name = "report_content", nullable = false, columnDefinition = "TEXT")
     private String reportContent;
 
