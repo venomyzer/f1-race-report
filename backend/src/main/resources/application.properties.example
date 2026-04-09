@@ -2,6 +2,7 @@
 # 🚀 SERVER CONFIG
 # =========================
 server.port=${PORT:8080}
+spring.application.name=f1-race-report-backend
 
 # =========================
 # 🗄️ DATABASE CONFIG
@@ -9,14 +10,52 @@ server.port=${PORT:8080}
 spring.datasource.url=${DB_URL}
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# HikariCP
+spring.datasource.hikari.minimum-idle=2
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.connection-timeout=20000
+spring.datasource.hikari.pool-name=F1ReportHikariPool
 
 # =========================
 # 🧠 JPA CONFIG
 # =========================
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 
 # =========================
 # 🤖 GROQ API
 # =========================
 groq.api.key=${GROQ_API_KEY}
+groq.api.base-url=https://api.groq.com/openai/v1
+groq.api.model=${GROQ_MODEL:llama-3.3-70b-versatile}
+groq.api.max-tokens=2048
+groq.api.temperature=0.75
+groq.api.timeout-ms=30000
+
+# =========================
+# 🏎️ ERGAST / JOLPICA API
+# =========================
+ergast.api.base-url=https://api.jolpi.ca/ergast/f1
+ergast.api.default-limit=100
+ergast.api.timeout-ms=10000
+
+# =========================
+# 💾 CACHE
+# =========================
+spring.cache.type=caffeine
+spring.cache.caffeine.spec=maximumSize=500,expireAfterWrite=360m
+
+# =========================
+# 📊 ACTUATOR
+# =========================
+management.endpoints.web.exposure.include=health,info
+management.endpoint.health.show-details=always
+
+# =========================
+# 📝 LOGGING
+# =========================
+logging.level.com.f1report=INFO
+logging.level.org.springframework.web=WARN
