@@ -1,192 +1,230 @@
-# F1 Race Report Tool — Backend
+<div align="center">
 
-> Spring Boot REST API that fetches Formula 1 race data from the Jolpica/Ergast F1 API,
-> persists it to PostgreSQL, and generates AI-powered journalist-style race reports using the Groq API.
+<!-- F1 Racing Banner -->
+<img src="https://readme-typing-svg.demolab.com?font=Formula1+Display&size=40&duration=3000&pause=1000&color=E10600&center=true&vCenter=true&width=800&height=80&lines=F1+RACE+REPORT+TOOL;AI-POWERED+FORMULA+1+ANALYSIS" alt="F1 Race Report Tool" />
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=E10600&height=120&section=header&text=&animation=fadeIn" width="100%"/>
+
+# 🏎️ F1 Race Report Tool
+
+### AI-powered Formula 1 race analysis · Live charts · Journalist-style reports
+
+[![Live Demo](https://img.shields.io/badge/🚀_LIVE_DEMO-f1--race--report.vercel.app-E10600?style=for-the-badge&logoColor=white)](https://f1-race-report.vercel.app)
+[![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
+[![Frontend](https://img.shields.io/badge/Frontend-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
+[![Database](https://img.shields.io/badge/Database-Neon_DB-brightgreen?style=for-the-badge&logo=postgresql&logoColor=white)](https://vercel.com)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+
+<br/>
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/W7W31XIH60)
+
+<br/>
+
+
+
+![Home Page](screenshots/01-home.png)
+
+</div>
 
 ---
 
-## 📐 Architecture Overview
+## ⚡ What is this?
+
+> Select any Formula 1 race from **1950 to 2026**, and get an instant AI-generated race report written like a professional journalist — complete with lap charts, podium display, full results table, and championship standings.
+
+**Powered by:**
+- 🏁 **Jolpica F1 API** — race data, lap times, standings
+- 🤖 **Groq AI (llama-3.3-70b-versatile)** — journalist-style race reports
+- 🗄️ **Neon PostgreSQL** — persistent storage for races and reports
+
+---
+
+## 📸 Screenshots
+
+<div align="center">
+
+### 🏆 Podium & Race Summary
+![Results Top](screenshots/02-results-top.png)
+
+### 📋 Full Race Results Table
+![Results Table](screenshots/03-results-table.png)
+
+### 📈 Lap-by-Lap Position Tracker
+![Lap Chart](screenshots/04-lap-chart.png)
+
+### 🏅 Championship Standings
+![Standings Chart](screenshots/07-standings-chart.png)
+
+### 🤖 AI Race Report
+![AI Report](screenshots/05-ai-report.png)
+
+### 📁 Report History
+![Reports Page](screenshots/06-reports-page.png)
+
+</div>
+
+---
+
+## 🧠 Architecture
 
 ```
-React Frontend (Port 5173)
-        │
-        │ HTTP / JSON
-        ▼
-Spring Boot REST API (Port 8080)
-        │
-        ├──► PostgreSQL (Port 5432)      ← Persist races, drivers, results, reports
-        ├──► Jolpica F1 API              ← Fetch race data, lap times, standings
-        │    https://api.jolpi.ca/ergast/f1
-        └──► Groq AI API                 ← Generate journalist race reports
-             https://api.groq.com/openai/v1
+┌─────────────────────────────────────────────────────────────┐
+│                        MONOREPO                             │
+│                   f1-race-report/                           │
+│              ┌──────────┬──────────┐                        │
+│              │ frontend │ backend  │                        │
+│              └────┬─────┴────┬─────┘                        │
+└───────────────────┼──────────┼──────────────────────────────┘
+                    │          │
+          Vercel    │          │   Render
+     ───────────────┘          └──────────────
+     React + Vite                Spring Boot
+     Tailwind CSS                Java 21
+     Recharts                    PostgreSQL (Neon)
+          │                           │
+          │      HTTPS / JSON         │
+          └───────────────────────────┘
+                    │          │
+          ┌─────────┘          └──────────┐
+          │                              │
+   Jolpica F1 API               Groq AI API
+   (Race Data)              (Report Generation)
 ```
 
 ### Request Flow
-
 ```
-GET /api/race-data?season=2024&round=5
-        │
-        ▼
-RaceController.getRaceData()
-        │
-        ▼
-RaceDataService.getRaceData()
-        │
-        ├─ Check PostgreSQL ──► Hit → return from DB (fast)
-        │                       Miss ↓
-        └─ ErgastService.fetchRaceResults()   → Jolpica API call
-           ErgastService.fetchLapData()       → Jolpica API call
-           ErgastService.fetchDriverStandings()→ Jolpica API call
-                │
-                └─ Persist to PostgreSQL (async)
-                │
-                └─ Assemble RaceDataDTO → return JSON
-```
-
----
-
-## 🗂️ Project Structure
-
-```
-src/main/java/com/f1report/
-├── F1ReportApplication.java       ← Entry point
-├── config/
-│   ├── AppConfig.java             ← RestTemplate beans, thread pool
-│   ├── CacheConfig.java           ← Caffeine cache with per-cache TTLs
-│   └── CorsConfig.java            ← CORS for React frontend
-├── controller/
-│   ├── SeasonController.java      ← GET /api/seasons, GET /api/races
-│   ├── RaceController.java        ← GET /api/race-data
-│   ├── ReportController.java      ← POST /api/generate-report, PDF export
-│   └── GlobalExceptionHandler.java← Catches all exceptions → JSON errors
-├── service/
-│   ├── ErgastService.java         ← Jolpica API integration + JSON parsing
-│   ├── RaceDataService.java       ← Orchestrates fetch + DB + DTO assembly
-│   ├── GroqService.java           ← Groq AI API + prompt engineering
-│   ├── ReportService.java         ← Report lifecycle (check → generate → store)
-│   └── PdfExportService.java      ← OpenPDF report generation
-├── repository/
-│   ├── DriverRepository.java
-│   ├── RaceRepository.java
-│   ├── RaceResultRepository.java
-│   └── ReportRepository.java
-├── model/
-│   ├── Driver.java                ← @Entity → drivers table
-│   ├── Race.java                  ← @Entity → races table
-│   ├── RaceResult.java            ← @Entity → race_results table
-│   └── Report.java                ← @Entity → reports table
-└── dto/
-    ├── ApiResponseDTO.java        ← Generic { success, message, data } wrapper
-    ├── SeasonDTO.java
-    ├── RaceDTO.java
-    ├── DriverResultDTO.java
-    ├── LapDataDTO.java
-    ├── RaceDataDTO.java           ← Master race payload (all data combined)
-    ├── ReportRequestDTO.java
-    └── ReportResponseDTO.java
+User selects race
+      │
+      ▼
+React (Vercel) ──GET /api/race-data──► Spring Boot (Render)
+                                              │
+                                    ┌─────────┴──────────┐
+                                    │                    │
+                              Check Neon DB         Jolpica API
+                              (cached?)             (if not cached)
+                                    │                    │
+                                    └─────────┬──────────┘
+                                              │
+                                    Assemble RaceDataDTO
+                                              │
+                                    ◄─────────┘
+                                    Return to React
+                                              │
+User clicks "Generate AI Report"              │
+      │                                       │
+      ▼                                       │
+POST /api/generate-report                     │
+      │                                       │
+      ▼                                       │
+  Groq AI ──────────────────────────────────► │
+  (llama-3.3-70b-versatile)                   │
+      │                                       │
+  Report stored in Neon DB                    │
+      │                                       │
+  Returned to React ◄──────────────────────── ┘
 ```
 
 ---
 
-## ⚙️ Prerequisites
+## 🛠️ Tech Stack
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| Java | 21 (LTS) | Runtime |
-| Gradle | 8.7 (via wrapper) | Build tool |
-| PostgreSQL | 15+ | Database |
-| Groq API Key | Free | AI report generation |
+### Backend
+| Technology | Purpose |
+|---|---|
+| **Spring Boot 3.2.5** | REST API framework |
+| **Java 21** | Runtime |
+| **Gradle** | Build tool |
+| **Spring Data JPA + Hibernate** | ORM / Database layer |
+| **PostgreSQL (Neon)** | Cloud database |
+| **HikariCP** | Connection pooling |
+| **Caffeine Cache** | In-memory caching |
+| **OpenPDF** | PDF report export |
+| **Groq API** | AI text generation |
+| **Jolpica F1 API** | Race data source |
+| **Lombok** | Boilerplate reduction |
+
+### Frontend
+| Technology | Purpose |
+|---|---|
+| **React 18** | UI framework |
+| **Vite** | Build tool & dev server |
+| **Tailwind CSS** | Styling |
+| **Recharts** | Data visualisation |
+| **React Router v6** | Client-side routing |
+| **Axios** | HTTP client |
+| **react-markdown** | AI report rendering |
+| **react-hot-toast** | Notifications |
+| **lucide-react** | Icons |
 
 ---
 
-## 🚀 Setup & Run
+## 🚀 Getting Started (Local)
 
-### 1. Clone the project
+### Prerequisites
+- Java 21
+- Node.js 18+
+- PostgreSQL (or a [Neon](https://neon.tech) free account)
+- [Groq API key](https://console.groq.com) (free)
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/venomyzer/f1-race-report.git
+cd f1-race-report
+```
+
+### 2. Backend setup
+```bash
+cd backend
+
+# Copy and configure properties
+cp src/main/resources/application.properties.example \
+   src/main/resources/application.properties
+
+# Edit with your values
+nano src/main/resources/application.properties
+```
+
+Set these values:
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/f1reportdb
+spring.datasource.username=your_pg_username
+spring.datasource.password=your_pg_password
+groq.api.key=gsk_your_groq_key_here
+```
 
 ```bash
-git clone <your-repo-url>
-cd f1-race-report-backend
-```
-
-### 2. Create PostgreSQL database
-
-```bash
-# Connect to PostgreSQL
-psql -U postgres
-
 # Create the database
-CREATE DATABASE f1reportdb;
-\q
-```
+createdb f1reportdb
 
-### 3. Configure environment variables
-
-```bash
-# Copy the example env file
-cp .env.example .env
-
-# Edit .env with your values
-nano .env
-```
-
-Fill in:
-- `DB_PASSWORD` – your PostgreSQL password
-- `GROQ_API_KEY` – get free at https://console.groq.com
-
-### 4. Set environment variables in your shell
-
-**macOS/Linux:**
-```bash
-export DB_URL=jdbc:postgresql://localhost:5432/f1reportdb
-export DB_USERNAME=postgres
-export DB_PASSWORD=your_password
-export GROQ_API_KEY=gsk_your_key_here
-```
-
-**Windows (PowerShell):**
-```powershell
-$env:DB_URL="jdbc:postgresql://localhost:5432/f1reportdb"
-$env:DB_USERNAME="postgres"
-$env:DB_PASSWORD="your_password"
-$env:GROQ_API_KEY="gsk_your_key_here"
-```
-
-### 5. Run the application
-
-```bash
-# Grant execute permission to Gradle wrapper (macOS/Linux only)
-chmod +x gradlew
-
-# Start the Spring Boot application
+# Run the backend
 ./gradlew bootRun
 ```
 
-You should see:
-```
-  .   ____          _            __ _ _
- /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
-( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
- \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
-  '  |____| .__|_| |_|_| |_\__, | / / / /
- =========|_|==============|___/=/_/_/_/
- :: Spring Boot ::               (v3.2.5)
+Backend starts at `http://localhost:8080`
 
-...
-[main] c.f1report.F1ReportApplication  : Started F1ReportApplication in 3.2 seconds
-```
-
-### 6. Build a production JAR
-
+### 3. Frontend setup
 ```bash
-./gradlew bootJar
-java -jar build/libs/f1-race-report-backend.jar
+cd frontend
+
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env → set VITE_API_BASE_URL=http://localhost:8080
+
+# Start dev server
+npm run dev
 ```
+
+Frontend starts at `http://localhost:5173`
 
 ---
 
 ## 🌐 API Reference
 
-All endpoints return:
+All responses follow this shape:
 ```json
 {
   "success": true,
@@ -196,205 +234,136 @@ All endpoints return:
 }
 ```
 
-### GET `/api/seasons`
-Returns all available F1 seasons (1950–present), newest first.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/seasons` | All F1 seasons (1950–2026) |
+| `GET` | `/api/races?season=2024` | All races for a season |
+| `GET` | `/api/race-data?season=2024&round=1` | Full race data payload |
+| `POST` | `/api/generate-report` | Generate AI race report |
+| `GET` | `/api/reports` | Recent 10 reports |
+| `GET` | `/api/reports/{id}` | Specific report by ID |
+| `GET` | `/api/export-pdf/{id}` | Download report as PDF |
+| `GET` | `/actuator/health` | Health check |
 
+### Example: Generate a report
 ```bash
-curl http://localhost:8080/api/seasons
-```
-
-### GET `/api/races?season=2024`
-Returns all races for a given season.
-
-```bash
-curl "http://localhost:8080/api/races?season=2024"
-```
-
-### GET `/api/race-data?season=2024&round=5`
-Returns the full race payload (results + lap data + standings).
-
-```bash
-curl "http://localhost:8080/api/race-data?season=2024&round=5"
-```
-
-### POST `/api/generate-report`
-Generates an AI race report using Groq.
-
-```bash
-curl -X POST http://localhost:8080/api/generate-report \
+curl -X POST https://your-backend.onrender.com/api/generate-report \
   -H "Content-Type: application/json" \
-  -d '{"season": 2024, "round": 5, "forceRegenerate": false}'
-```
-
-### GET `/api/reports`
-Returns the 10 most recently generated reports.
-
-```bash
-curl http://localhost:8080/api/reports
-```
-
-### GET `/api/export-pdf/{reportId}`
-Downloads the report as a PDF file.
-
-```bash
-curl "http://localhost:8080/api/export-pdf/1" --output race-report.pdf
-```
-
-### GET `/api/export-pdf/race?season=2024&round=5`
-Downloads PDF by season+round (requires report to exist).
-
-```bash
-curl "http://localhost:8080/api/export-pdf/race?season=2024&round=5" --output race-report.pdf
-```
-
-### GET `/actuator/health`
-Application health check (for load balancers / monitoring).
-
-```bash
-curl http://localhost:8080/actuator/health
+  -d '{"season": 2024, "round": 1, "forceRegenerate": false}'
 ```
 
 ---
 
 ## 🗄️ Database Schema
 
-Hibernate auto-creates these tables on startup (`JPA_DDL_AUTO=update`):
-
 ```sql
--- drivers: one row per unique F1 driver
-CREATE TABLE drivers (
-    id               BIGSERIAL PRIMARY KEY,
-    driver_id        VARCHAR(100) UNIQUE NOT NULL,  -- "max_verstappen"
-    given_name       VARCHAR(100) NOT NULL,
-    family_name      VARCHAR(100) NOT NULL,
-    date_of_birth    VARCHAR(20),
-    nationality      VARCHAR(100),
-    permanent_number VARCHAR(5),
-    code             VARCHAR(5),                     -- "VER"
-    url              VARCHAR(500)
-);
-
--- races: one row per Grand Prix event
-CREATE TABLE races (
-    id           BIGSERIAL PRIMARY KEY,
-    season       INT NOT NULL,
-    round        INT NOT NULL,
-    race_name    VARCHAR(200) NOT NULL,
-    circuit_id   VARCHAR(100),
-    circuit_name VARCHAR(200),
-    country      VARCHAR(100),
-    locality     VARCHAR(100),
-    race_date    DATE,
-    race_time    VARCHAR(20),
-    UNIQUE (season, round)
-);
-
--- race_results: one row per driver per race
-CREATE TABLE race_results (
-    id                    BIGSERIAL PRIMARY KEY,
-    race_id               BIGINT REFERENCES races(id),
-    driver_id             BIGINT REFERENCES drivers(id),
-    finishing_position    INT,
-    grid_position         INT,
-    points                DOUBLE PRECISION,
-    laps_completed        INT,
-    status                VARCHAR(50),
-    finish_time           VARCHAR(50),
-    fastest_lap_time      VARCHAR(50),
-    fastest_lap_rank      INT,
-    fastest_lap_avg_speed DOUBLE PRECISION,
-    constructor_name      VARCHAR(100),
-    car_number            VARCHAR(5),
-    UNIQUE (race_id, driver_id)
-);
-
--- reports: AI-generated race reports
-CREATE TABLE reports (
-    id                BIGSERIAL PRIMARY KEY,
-    season            INT NOT NULL,
-    round             INT NOT NULL,
-    race_name         VARCHAR(200),
-    report_content    TEXT NOT NULL,
-    model_used        VARCHAR(100),
-    prompt_tokens     INT,
-    completion_tokens INT,
-    created_at        TIMESTAMP NOT NULL,
-    winner_name       VARCHAR(200),
-    winner_constructor VARCHAR(100)
-);
-CREATE INDEX idx_reports_season_round ON reports(season, round);
+drivers        → F1 driver profiles
+races          → Grand Prix events (season + round)
+race_results   → Per-driver finishing data (FK → races, drivers)
+reports        → AI-generated race reports (TEXT)
 ```
 
 ---
 
-## 🔧 Caching Strategy
+## 💾 Caching Strategy
 
-| Cache | TTL | Max Entries | Notes |
-|-------|-----|-------------|-------|
-| `seasons` | 24 hours | 20 | Rarely changes |
-| `races` | 6 hours | 500 | May update mid-season |
-| `raceResults` | 12 hours | 200 | Immutable after race |
-| `lapData` | 12 hours | 100 | Immutable after race |
-| `standings` | 6 hours | 500 | Updates each race |
+| Cache | TTL | Reason |
+|-------|-----|--------|
+| `seasons` | 24 hours | Changes once a year |
+| `races` | 6 hours | Stable during season |
+| `raceResults` | 12 hours | Immutable after race |
+| `lapData` | 12 hours | Immutable after race |
+| `standings` | 6 hours | Updates each race |
 
 ---
 
-## 🐳 Docker (Optional)
+## 🚢 Deployment
 
-```bash
-# Build the JAR first
-./gradlew bootJar
+| Service | Platform | URL |
+|---------|----------|-----|
+| Frontend | Vercel | https://f1-race-report.vercel.app |
+| Backend | Render | your-backend.onrender.com |
+| Database | Neon | PostgreSQL (Singapore region) |
 
-# Run with Docker Compose (includes PostgreSQL)
-docker-compose up
+### Environment Variables
+
+**Backend (Render):**
+```
+DB_URL=jdbc:postgresql://...
+DB_USERNAME=...
+DB_PASSWORD=...
+GROQ_API_KEY=gsk_...
+GROQ_MODEL=llama-3.3-70b-versatile
+PORT=10000
 ```
 
-`docker-compose.yml` (create this):
-```yaml
-version: '3.8'
-services:
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: f1reportdb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
-
-  backend:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      DB_URL: jdbc:postgresql://postgres:5432/f1reportdb
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
-      GROQ_API_KEY: ${GROQ_API_KEY}
-    depends_on:
-      - postgres
+**Frontend (Vercel):**
+```
+VITE_API_BASE_URL=https://your-backend.onrender.com
 ```
 
 ---
 
-## 🐛 Troubleshooting
+## 📁 Project Structure
 
-| Problem | Cause | Fix |
-|---------|-------|-----|
-| `Connection refused` on DB | PostgreSQL not running | `brew services start postgresql` or `pg_ctl start` |
-| `401 Unauthorized` from Groq | Wrong/missing API key | Check `GROQ_API_KEY` env var |
-| Empty lap data | Old races (pre-2012) | Expected – Ergast has limited lap data for older races |
-| `No race data found` | Future race | Race hasn't happened yet |
-| Slow first request | Cache miss → Ergast API | Subsequent requests use cache |
+```
+f1-race-report/
+├── backend/
+│   ├── src/main/java/com/f1report/
+│   │   ├── config/          # CORS, Cache, RestTemplate
+│   │   ├── controller/      # REST endpoints
+│   │   ├── service/         # Business logic + AI + PDF
+│   │   ├── repository/      # Spring Data JPA
+│   │   ├── model/           # JPA entities
+│   │   └── dto/             # Request/Response objects
+│   ├── build.gradle
+│   └── Dockerfile
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/      # UI components
+│   │   ├── pages/           # Route pages
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── services/        # Axios API layer
+│   │   └── utils/           # Helpers, formatters
+│   ├── package.json
+│   └── vite.config.js
+│
+└── README.md
+```
 
 ---
 
-## 📦 Gradle Tasks Reference
+## ⚠️ Known Limitations
 
-```bash
-./gradlew bootRun       # Run in development mode (auto-restart on change)
-./gradlew bootJar       # Build production fat JAR
-./gradlew test          # Run all tests
-./gradlew dependencies  # Show dependency tree
-./gradlew clean         # Clean build directory
-```
+- **Render free tier** spins down after inactivity — first request may take ~50 seconds to wake up
+- **Lap data** not available for races before ~2012 (Ergast API limitation)
+- **2026 season** races not yet completed (future rounds return no data)
+
+---
+
+## 🙏 Credits
+
+- [Jolpica F1 API](https://api.jolpi.ca) — The open-source successor to Ergast
+- [Groq](https://groq.com) — Ultra-fast LLM inference
+- [Neon](https://neon.tech) — Serverless PostgreSQL
+
+---
+
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=E10600&height=100&section=footer" width="100%"/>
+
+**Built with ❤️ and too much coffee by [venomyzer](https://github.com/venomyzer)**
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/W7W31XIH60)
+
+[![GitHub](https://img.shields.io/badge/GitHub-venomyzer-181717?style=for-the-badge&logo=github)](https://github.com/venomyzer/f1-race-report)
+[![Live](https://img.shields.io/badge/🏎️_Try_it_Live-E10600?style=for-the-badge)](https://f1-race-report.vercel.app)
+
+
+
+
+*Not affiliated with Formula 1, the FIA, or any F1 team.*
+
+</div>
