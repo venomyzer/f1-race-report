@@ -25,4 +25,10 @@ WORKDIR /app
 COPY --from=build /app/build/libs/*[!plain].jar app.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", \
+  "-Dspring.datasource.url=${DB_URL}", \
+  "-Dspring.datasource.username=${DB_USERNAME}", \
+  "-Dspring.datasource.password=${DB_PASSWORD}", \
+  "-Dgroq.api.key=${GROQ_API_KEY}", \
+  "-Dserver.port=${PORT:-8080}", \
+  "-jar", "app.jar"]
